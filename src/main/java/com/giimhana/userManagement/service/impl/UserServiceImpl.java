@@ -18,6 +18,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.*;
 
+import com.giimhana.userManagement.constant.UserImplConstant;
 import com.giimhana.userManagement.domain.User;
 import com.giimhana.userManagement.domain.UserPrincipal;
 import com.giimhana.userManagement.enumeration.Role;
@@ -48,13 +49,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
         if (user == null) {
             LOGGER.error("User not found by username: " + username);
-            throw new UsernameNotFoundException("User not found by username: " + username);
+            throw new UsernameNotFoundException(UserImplConstant.NO_USER_FOUND_BY_USERNAME + username);
         } else {
             user.setLastLoginDate(user.getLastLoginDate());
             user.setLastLoginDate(new Date());
             userRepository.save(user);
             UserPrincipal userPrincipal = new UserPrincipal(user);
-            LOGGER.info("Returning found user by username" + username);
+            LOGGER.info(UserImplConstant.FOUND_USER_BY_USERNAME + username);
             return userPrincipal;
         }
 
@@ -88,7 +89,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     private String getTemporaryProfileImageUrl() {
-        return ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/image/profile/temp").toUriString();
+        return ServletUriComponentsBuilder.fromCurrentContextPath().path(UserImplConstant.DEFAULT_USER_IMAGE_PATH)
+                .toUriString();
     }
 
     private String encordedPassword(String password) {
@@ -105,29 +107,33 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     private User validateNewUsernameAndEmail(String currentUsername, String newUsername, String newEmail)
             throws UsernameNotFoundException, UsernameExistException, EmailExistException {
+
+        User userByNewUsername = findUserByUsername(newUsername);
+        User userByNewEmail = findUserByEmail(newEmail);
+
         if (StringUtils.isNotBlank(currentUsername)) {
             User currentUser = findUserByUsername(currentUsername);
             if (currentUser == null) {
-                throw new UsernameNotFoundException("No user found by username " + currentUsername);
+                throw new UsernameNotFoundException(UserImplConstant.NO_USER_FOUND_BY_USERNAME + currentUsername);
             }
-            User userByNewUsername = findUserByUsername(newUsername);
+
             if (userByNewUsername != null && !currentUser.getId().equals(userByNewUsername.getId())) {
-                throw new UsernameExistException("Username already exists");
+                throw new UsernameExistException(UserImplConstant.USERNAME_ALREADY_EXISTS);
             }
-            User userByNewEmail = findUserByEmail(newEmail);
+
             if (userByNewEmail != null && !currentUser.getId().equals(userByNewEmail.getId())) {
-                throw new EmailExistException("Email already exists");
+                throw new EmailExistException(UserImplConstant.EMAIL_ALREADY_EXISTS);
             }
 
             return currentUser;
         } else {
-            User userByUsername = findUserByUsername(newUsername);
-            if (userByUsername != null) {
-                throw new UsernameExistException("Username already exists");
+
+            if (userByNewUsername != null) {
+                throw new UsernameExistException(UserImplConstant.USERNAME_ALREADY_EXISTS);
             }
-            User userByEmail = findUserByUsername(newEmail);
-            if (userByEmail != null) {
-                throw new EmailExistException("Email already exists");
+
+            if (userByNewEmail != null) {
+                throw new EmailExistException(UserImplConstant.EMAIL_ALREADY_EXISTS);
             }
 
             return null;
@@ -137,20 +143,17 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public List<User> getUser() {
-        // TODO Auto-generated method stub
-        return null;
+        return userRepository.findAll();
     }
 
     @Override
     public User findUserByUsername(String username) {
-        // TODO Auto-generated method stub
-        return null;
+        return userRepository.findUserByUserName(username);
     }
 
     @Override
     public User findUserByEmail(String email) {
-        // TODO Auto-generated method stub
-        return null;
+        return userRepository.findUserByEmail(email);
     }
 
 }
