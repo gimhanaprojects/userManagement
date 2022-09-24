@@ -83,7 +83,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         userRepository.save(user);
         LOGGER.info("New user password " + password);
 
-        return null;
+        return user;
 
     }
 
