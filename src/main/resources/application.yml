@@ -1,5 +1,5 @@
 jwt:
-  secret: secret
+  secret: "secret"
 
 server:
   port: 8081
