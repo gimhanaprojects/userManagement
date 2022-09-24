@@ -1,5 +1,6 @@
 package com.giimhana.userManagement.service;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
@@ -24,6 +25,22 @@ public class LoginAttemptService {
                     }
 
                 });
+    }
+
+    public void evictUserFromLoginAttempCache(String username) {
+        loginAttempCache.invalidate(username);
+    }
+
+    public void addUserToLoginAttempCache(String username) throws ExecutionException {
+        int attempts = 0;
+
+        attempts = ATTEMPT_INCREMENT + loginAttempCache.get(username);
+        loginAttempCache.put(username, attempts);
+
+    }
+
+    public boolean hasExceededMaxAttempts(String username) throws ExecutionException {
+        return loginAttempCache.get(username) >= MAXIMUM_NUMBER_OF_ATTEMPS;
     }
 
 }
