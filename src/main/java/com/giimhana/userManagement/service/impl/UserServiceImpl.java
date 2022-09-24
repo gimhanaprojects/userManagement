@@ -20,7 +20,7 @@ import com.giimhana.userManagement.service.UserService;
 
 @Service
 @Transactional
-@Qualifier("UserDetailsService")
+@Qualifier("userDetailsService")
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     private Logger LOGGER = org.slf4j.LoggerFactory.getLogger(getClass());
@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        User user = userRepository.findUserByUsername(username);
+        User user = userRepository.findUserByUserName(username);
 
         if (user == null) {
             LOGGER.error("User not found by username: " + username);
