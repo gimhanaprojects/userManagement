@@ -1,5 +1,6 @@
 package com.giimhana.userManagement.exception.domain;
 
+import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,10 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.auth0.jwt.exceptions.TokenExpiredException;
-import com.fasterxml.jackson.databind.introspect.ObjectIdInfo;
 import com.giimhana.userManagement.domain.HttpResponse;
 
 import java.io.IOException;
@@ -23,7 +24,7 @@ import java.util.Objects;
 import javax.persistence.NoResultException;
 
 @RestControllerAdvice
-public class ExceptionHandling {
+public class ExceptionHandling implements ErrorController {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     private static final String ACCOUNT_LOCKED = "Your account has been locked. Please contact administration";
@@ -33,6 +34,7 @@ public class ExceptionHandling {
     private static final String ACCOUNT_DISABLED = "Your account has been disabled. If this isan error, please contact administration";
     private static final String ERROR_PROCESSING_FILE = "Error occurred while processing file";
     private static final String NOT_ENOUGH_PERMISSION = "You don not have enough permission";
+    public static final String ERROR_PATH = "/error";
 
     @ExceptionHandler(DisabledException.class)
     private ResponseEntity<HttpResponse> accountDisabledException() {
@@ -79,6 +81,14 @@ public class ExceptionHandling {
         return createHttpResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
+    // @ExceptionHandler(NoHandlerFoundException.class)
+    // private ResponseEntity<HttpResponse>
+    // methodNotSupportedException(NoHandlerFoundException exception) {
+
+    // return createHttpResponse(HttpStatus.BAD_REQUEST,
+    // "This page was not found");
+    // }
+
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     private ResponseEntity<HttpResponse> methodNotSupportedException(HttpRequestMethodNotSupportedException exception) {
         HttpMethod supportedMethod = Objects.requireNonNull(exception.getSupportedHttpMethods()).iterator().next();
@@ -109,6 +119,15 @@ public class ExceptionHandling {
                 httpStatus.getReasonPhrase().toUpperCase(), message.toUpperCase());
 
         return new ResponseEntity<>(httpResponse, httpStatus);
+    }
+
+    @RequestMapping(ERROR_PATH)
+    private ResponseEntity<HttpResponse> notFound404() {
+        return createHttpResponse(HttpStatus.NOT_FOUND, "There is no mapping for this url");
+    }
+
+    public String getErrorPath() {
+        return ERROR_PATH;
     }
 
 }
