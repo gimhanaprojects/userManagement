@@ -25,6 +25,7 @@ import com.giimhana.userManagement.enumeration.Role;
 import com.giimhana.userManagement.exception.domain.EmailExistException;
 import com.giimhana.userManagement.exception.domain.UsernameExistException;
 import com.giimhana.userManagement.repository.UserRepository;
+import com.giimhana.userManagement.service.LoginAttemptService;
 import com.giimhana.userManagement.service.UserService;
 
 @Service
@@ -35,11 +36,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private Logger LOGGER = org.slf4j.LoggerFactory.getLogger(getClass());
     private UserRepository userRepository;
     private BCryptPasswordEncoder passwordEncoder;
+    private LoginAttemptService loginAttemptService;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder,
+            LoginAttemptService loginAttemptService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.loginAttemptService = loginAttemptService;
     }
 
     @Override
@@ -51,6 +55,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             LOGGER.error("User not found by username: " + username);
             throw new UsernameNotFoundException(UserImplConstant.NO_USER_FOUND_BY_USERNAME + username);
         } else {
+            validateLoginAttempt(user);
             user.setLastLoginDate(user.getLastLoginDate());
             user.setLastLoginDate(new Date());
             userRepository.save(user);
@@ -59,6 +64,20 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             return userPrincipal;
         }
 
+    }
+
+    private void validateLoginAttempt(User user) {
+        if (user.isNotLocked()) {
+            if (loginAttemptService.hasExceededMaxAttempts(user.getUsername())) {
+                user.setNotLocked(false);
+
+            } else {
+
+                user.setNotLocked(true);
+            }
+        } else {
+            loginAttemptService.evictUserFromLoginAttempCache(user.getUsername());
+        }
     }
 
     @Override
