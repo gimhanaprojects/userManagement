@@ -21,7 +21,7 @@ public class EmailService {
         Message message = createEmail(firstName, password, email);
         SMTPTransport smtpTransport = (SMTPTransport) getEmailSession()
                 .getTransport(EmailConstant.SIMPLE_MAIL_TRANSFER_PROTOCOL);
-        smtpTransport.connect(EmailConstant.GMAIL_SMTP_SERVER, EmailConstant.PASSWORD);
+        smtpTransport.connect(EmailConstant.GMAIL_SMTP_SERVER, EmailConstant.USERNAME, EmailConstant.PASSWORD);
         smtpTransport.sendMessage(message, message.getAllRecipients());
         smtpTransport.close();
 
