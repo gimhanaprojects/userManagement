@@ -2,6 +2,8 @@ package com.giimhana.userManagement.service;
 
 import java.util.List;
 
+import javax.mail.MessagingException;
+
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.giimhana.userManagement.domain.User;
@@ -11,7 +13,7 @@ import com.giimhana.userManagement.exception.domain.UsernameExistException;
 public interface UserService {
 
     User register(String firstName, String lastName, String username, String email)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException;
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, MessagingException;
 
     List<User> getUser();
 

@@ -12,6 +12,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.util.Date;
 import java.util.List;
 
+import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -25,6 +26,7 @@ import com.giimhana.userManagement.enumeration.Role;
 import com.giimhana.userManagement.exception.domain.EmailExistException;
 import com.giimhana.userManagement.exception.domain.UsernameExistException;
 import com.giimhana.userManagement.repository.UserRepository;
+import com.giimhana.userManagement.service.EmailService;
 import com.giimhana.userManagement.service.LoginAttemptService;
 import com.giimhana.userManagement.service.UserService;
 
@@ -37,13 +39,15 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private UserRepository userRepository;
     private BCryptPasswordEncoder passwordEncoder;
     private LoginAttemptService loginAttemptService;
+    private EmailService emailService;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder,
-            LoginAttemptService loginAttemptService) {
+            LoginAttemptService loginAttemptService, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.loginAttemptService = loginAttemptService;
+        this.emailService = emailService;
     }
 
     @Override
@@ -82,7 +86,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public User register(String firstName, String lastName, String username, String email)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException {
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, MessagingException {
         validateNewUsernameAndEmail(StringUtils.EMPTY, username, email);
         User user = new User();
         user.setUserId(generateUserId());
@@ -102,6 +106,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
         userRepository.save(user);
         LOGGER.info("New user password " + password);
+        // emailService.sendNewPasswordEmail(firstName, password, email);
 
         return user;
 

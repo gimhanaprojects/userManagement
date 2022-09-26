@@ -1,5 +1,7 @@
 package com.giimhana.userManagement.resource;
 
+import javax.mail.MessagingException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -50,7 +52,7 @@ public class UserResource extends ExceptionHandling {
 
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody User user)
-            throws EmailExistException, UsernameNotFoundException, UsernameExistException {
+            throws EmailExistException, UsernameNotFoundException, UsernameExistException, MessagingException {
         User newUser = userService.register(user.getFirstName(), user.getLastName(), user.getUsername(),
                 user.getEmail());
         return new ResponseEntity<>(newUser, HttpStatus.OK);

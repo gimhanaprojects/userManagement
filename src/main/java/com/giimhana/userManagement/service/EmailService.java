@@ -1,15 +1,46 @@
 package com.giimhana.userManagement.service;
 
+import java.util.Date;
 import java.util.Properties;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import org.springframework.stereotype.Service;
 
 import com.giimhana.userManagement.constant.EmailConstant;
+import com.sun.mail.smtp.SMTPTransport;
 
 @Service
 public class EmailService {
+
+    public void sendNewPasswordEmail(String firstName, String password, String email) throws MessagingException {
+        Message message = createEmail(firstName, password, email);
+        SMTPTransport smtpTransport = (SMTPTransport) getEmailSession()
+                .getTransport(EmailConstant.SIMPLE_MAIL_TRANSFER_PROTOCOL);
+        smtpTransport.connect(EmailConstant.GMAIL_SMTP_SERVER, EmailConstant.PASSWORD);
+        smtpTransport.sendMessage(message, message.getAllRecipients());
+        smtpTransport.close();
+
+    }
+
+    private Message createEmail(String firstName, String password, String email) throws MessagingException {
+
+        Message message = new MimeMessage(getEmailSession());
+        message.setFrom(new InternetAddress(EmailConstant.FROM_EMAIL));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(email, false));
+        message.setRecipients(Message.RecipientType.CC, InternetAddress.parse(EmailConstant.CC_EMAIL, false));
+        message.setSubject(EmailConstant.EMAIL_SUBJECT);
+        message.setText(
+                "Hello " + firstName + ", \n \n Your new account password is: " + password + "\n \n  The Support Team");
+        message.setSentDate(new Date());
+        message.saveChanges();
+        return message;
+
+    }
 
     private Session getEmailSession() {
         Properties properties = System.getProperties();
