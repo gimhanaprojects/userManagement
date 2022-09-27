@@ -13,26 +13,29 @@ import com.giimhana.userManagement.exception.domain.UsernameExistException;
 
 public interface UserService {
 
-    User register(String firstName, String lastName, String username, String email)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException, MessagingException;
+        User register(String firstName, String lastName, String username, String email)
+                        throws UsernameNotFoundException, UsernameExistException, EmailExistException,
+                        MessagingException;
 
-    List<User> getUser();
+        List<User> getUser();
 
-    User findUserByUsername(String username);
+        User findUserByUsername(String username);
 
-    User findUserByEmail(String email);
+        User findUserByEmail(String email);
 
-    User addNewUser(String firstName, String lastName, String username, String email, String role, boolean isNotLocked,
-            boolean isActive, MultipartFile profileImage);
+        User addNewUser(String firstName, String lastName, String username, String email, String role,
+                        boolean isNotLocked,
+                        boolean isActive, MultipartFile profileImage)
+                        throws UsernameNotFoundException, UsernameExistException, EmailExistException;
 
-    User updateUser(String currentUsername, String newFirstName, String newLastName, String newUsername,
-            String newEmail, String role,
-            boolean isNotLocked, boolean isActive, MultipartFile profileImage);
+        User updateUser(String currentUsername, String newFirstName, String newLastName, String newUsername,
+                        String newEmail, String role,
+                        boolean isNotLocked, boolean isActive, MultipartFile profileImage);
 
-    void deleteUser(long id);
+        void deleteUser(long id);
 
-    void resetPassword(String email);
+        void resetPassword(String email);
 
-    User updateProfileImage(String username, MultipartFile profileImage);
+        User updateProfileImage(String username, MultipartFile profileImage);
 
 }

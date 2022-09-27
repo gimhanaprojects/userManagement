@@ -20,6 +20,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.*;
 
+import com.giimhana.userManagement.constant.FileConstant;
 import com.giimhana.userManagement.constant.UserImplConstant;
 import com.giimhana.userManagement.domain.User;
 import com.giimhana.userManagement.domain.UserPrincipal;
@@ -103,7 +104,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         user.setNotLocked(true);
         user.setRole(Role.ROLE_USER.name());
         user.setAuthorities(Role.ROLE_USER.getAuthorities());
-        user.setProfileImageUrl(getTemporaryProfileImageUrl());
+        user.setProfileImageUrl(getTemporaryProfileImageUrl(username));
 
         userRepository.save(user);
         LOGGER.info("New user password " + password);
@@ -113,8 +114,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     }
 
-    private String getTemporaryProfileImageUrl() {
-        return ServletUriComponentsBuilder.fromCurrentContextPath().path(UserImplConstant.DEFAULT_USER_IMAGE_PATH)
+    private String getTemporaryProfileImageUrl(String username) {
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path(FileConstant.DEFAULT_USER_IMAGE_PATH + username)
                 .toUriString();
     }
 
@@ -183,8 +185,35 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public User addNewUser(String firstName, String lastName, String username, String email, String role,
-            boolean isNotLocked, boolean isActive, MultipartFile profileImage) {
-        // TODO Auto-generated method stub
+            boolean isNotLocked, boolean isActive, MultipartFile profileImage)
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException {
+        validateNewUsernameAndEmail(StringUtils.EMPTY, username, email);
+
+        User user = new User();
+        String password = generatePassword();
+        String encodePassword = encordedPassword(password);
+        user.setUserId(generateUserId());
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setJoinDate(new Date());
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(encodePassword);
+        user.setActive(isActive);
+        user.setNotLocked(isNotLocked);
+        user.setRole(getRoleEnumName(role).name());
+        user.setAuthorities(getRoleEnumName(role).getAuthorities());
+        user.setProfileImageUrl(getTemporaryProfileImageUrl(username));
+        userRepository.save(user);
+        saveProfileImage(user, profileImage);
+
+        return user;
+    }
+
+    private void saveProfileImage(User user, MultipartFile profileImage) {
+    }
+
+    private Role getRoleEnumName(String role) {
         return null;
     }
 
