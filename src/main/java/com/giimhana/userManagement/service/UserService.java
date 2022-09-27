@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.giimhana.userManagement.domain.User;
 import com.giimhana.userManagement.exception.domain.EmailExistException;
+import com.giimhana.userManagement.exception.domain.EmailNotFoundException;
 import com.giimhana.userManagement.exception.domain.UsernameExistException;
 
 public interface UserService {
@@ -30,12 +31,14 @@ public interface UserService {
 
         User updateUser(String currentUsername, String newFirstName, String newLastName, String newUsername,
                         String newEmail, String role,
-                        boolean isNotLocked, boolean isActive, MultipartFile profileImage);
+                        boolean isNotLocked, boolean isActive, MultipartFile profileImage)
+                        throws UsernameNotFoundException, UsernameExistException, EmailExistException;
 
         void deleteUser(long id);
 
-        void resetPassword(String email);
+        void resetPassword(String email) throws EmailNotFoundException, MessagingException;
 
-        User updateProfileImage(String username, MultipartFile profileImage);
+        User updateProfileImage(String username, MultipartFile profileImage)
+                        throws UsernameNotFoundException, UsernameExistException, EmailExistException;
 
 }

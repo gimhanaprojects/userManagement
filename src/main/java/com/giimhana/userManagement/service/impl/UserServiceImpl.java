@@ -26,6 +26,7 @@ import com.giimhana.userManagement.domain.User;
 import com.giimhana.userManagement.domain.UserPrincipal;
 import com.giimhana.userManagement.enumeration.Role;
 import com.giimhana.userManagement.exception.domain.EmailExistException;
+import com.giimhana.userManagement.exception.domain.EmailNotFoundException;
 import com.giimhana.userManagement.exception.domain.UsernameExistException;
 import com.giimhana.userManagement.repository.UserRepository;
 import com.giimhana.userManagement.service.EmailService;
@@ -219,27 +220,50 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public User updateUser(String currentUsername, String newFirstName, String newLastName, String newUsername,
-            String newEmail, String role, boolean isNotLocked, boolean isActive, MultipartFile profileImage) {
-        // TODO Auto-generated method stub
-        return null;
+            String newEmail, String role, boolean isNotLocked, boolean isActive, MultipartFile profileImage)
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException {
+        User currentUser = validateNewUsernameAndEmail(currentUsername, newUsername, newEmail);
+
+        currentUser.setFirstName(newFirstName);
+        currentUser.setLastName(newLastName);
+        currentUser.setUsername(newUsername);
+        currentUser.setEmail(newEmail);
+        currentUser.setActive(isActive);
+        currentUser.setNotLocked(isNotLocked);
+        currentUser.setRole(getRoleEnumName(role).name());
+
+        userRepository.save(currentUser);
+        saveProfileImage(currentUser, profileImage);
+
+        return currentUser;
     }
 
     @Override
     public void deleteUser(long id) {
-        // TODO Auto-generated method stub
+
+        userRepository.deleteById(id);
 
     }
 
     @Override
-    public void resetPassword(String email) {
-        // TODO Auto-generated method stub
+    public void resetPassword(String email) throws EmailNotFoundException, MessagingException {
+        User user = userRepository.findUserByEmail(email);
 
+        if (user == null) {
+            throw new EmailNotFoundException(UserImplConstant.NO_USER_FOUND_BY_USERNAME + email);
+        }
+        String password = generatePassword();
+        user.setPassword(encordedPassword(password));
+        userRepository.save(user);
+        emailService.sendNewPasswordEmail(user.getFirstName(), password, user.getEmail());
     }
 
     @Override
-    public User updateProfileImage(String username, MultipartFile profileImage) {
-        // TODO Auto-generated method stub
-        return null;
+    public User updateProfileImage(String username, MultipartFile profileImage)
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException {
+        User user = validateNewUsernameAndEmail(username, null, null);
+        saveProfileImage(user, profileImage);
+        return user;
     }
 
 }
