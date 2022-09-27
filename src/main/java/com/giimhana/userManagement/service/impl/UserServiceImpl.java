@@ -10,6 +10,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import java.util.Date;
 import java.util.List;
 
@@ -187,7 +192,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public User addNewUser(String firstName, String lastName, String username, String email, String role,
             boolean isNotLocked, boolean isActive, MultipartFile profileImage)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException {
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
         validateNewUsernameAndEmail(StringUtils.EMPTY, username, email);
 
         User user = new User();
@@ -211,17 +216,43 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return user;
     }
 
-    private void saveProfileImage(User user, MultipartFile profileImage) {
+    private void saveProfileImage(User user, MultipartFile profileImage) throws IOException {
+        if (profileImage != null) {
+            Path userFolder = Paths.get(FileConstant.USER_FOLDER + user.getUsername()).toAbsolutePath().normalize();
+
+            if (!Files.exists(userFolder)) {
+                Files.createDirectories(userFolder);
+                LOGGER.info(FileConstant.DIRECTORY_CREATED + userFolder);
+
+            }
+
+            Files.deleteIfExists(
+                    Paths.get(userFolder + user.getUsername() + FileConstant.DOT + FileConstant.JPG_EXTENSION));
+            Files.copy(profileImage.getInputStream(),
+                    userFolder.resolve(user.getUsername() + FileConstant.DOT + FileConstant.JPG_EXTENSION),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+            user.setProfileImageUrl(setProfileImageUrl(user.getUsername()));
+            userRepository.save(user);
+            LOGGER.info(FileConstant.FILE_SAVE_IN_FILE_SYSTEM + profileImage.getOriginalFilename());
+
+        }
+    }
+
+    private String setProfileImageUrl(String username) {
+        return ServletUriComponentsBuilder.fromCurrentContextPath().path(FileConstant.USER_IMAGE_PATH + username
+                + FileConstant.FORWARD_SLASH + username + FileConstant.DOT + FileConstant.JPG_EXTENSION).toUriString();
     }
 
     private Role getRoleEnumName(String role) {
-        return null;
+        return Role.valueOf(role.toUpperCase());
+
     }
 
     @Override
     public User updateUser(String currentUsername, String newFirstName, String newLastName, String newUsername,
             String newEmail, String role, boolean isNotLocked, boolean isActive, MultipartFile profileImage)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException {
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
         User currentUser = validateNewUsernameAndEmail(currentUsername, newUsername, newEmail);
 
         currentUser.setFirstName(newFirstName);
@@ -231,7 +262,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         currentUser.setActive(isActive);
         currentUser.setNotLocked(isNotLocked);
         currentUser.setRole(getRoleEnumName(role).name());
-
+        currentUser.setAuthorities(getRoleEnumName(role).getAuthorities());
         userRepository.save(currentUser);
         saveProfileImage(currentUser, profileImage);
 
@@ -260,7 +291,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public User updateProfileImage(String username, MultipartFile profileImage)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException {
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
         User user = validateNewUsernameAndEmail(username, null, null);
         saveProfileImage(user, profileImage);
         return user;

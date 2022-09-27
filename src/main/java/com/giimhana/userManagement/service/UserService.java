@@ -1,5 +1,6 @@
 package com.giimhana.userManagement.service;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -27,18 +28,18 @@ public interface UserService {
         User addNewUser(String firstName, String lastName, String username, String email, String role,
                         boolean isNotLocked,
                         boolean isActive, MultipartFile profileImage)
-                        throws UsernameNotFoundException, UsernameExistException, EmailExistException;
+                        throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException;
 
         User updateUser(String currentUsername, String newFirstName, String newLastName, String newUsername,
                         String newEmail, String role,
                         boolean isNotLocked, boolean isActive, MultipartFile profileImage)
-                        throws UsernameNotFoundException, UsernameExistException, EmailExistException;
+                        throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException;
 
         void deleteUser(long id);
 
         void resetPassword(String email) throws EmailNotFoundException, MessagingException;
 
         User updateProfileImage(String username, MultipartFile profileImage)
-                        throws UsernameNotFoundException, UsernameExistException, EmailExistException;
+                        throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException;
 
 }
