@@ -1,5 +1,7 @@
 package com.giimhana.userManagement.resource;
 
+import java.io.IOException;
+
 import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +14,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.giimhana.userManagement.constant.SecurityConstant;
 import com.giimhana.userManagement.domain.User;
@@ -47,6 +51,24 @@ public class UserResource extends ExceptionHandling {
         UserPrincipal userPrincipal = new UserPrincipal(loginUser);
         HttpHeaders jwtHeader = getJwtHeader(userPrincipal);
         return new ResponseEntity<>(loginUser, jwtHeader, HttpStatus.OK);
+
+    }
+
+    @PostMapping("/add")
+    public ResponseEntity<User> addNewUser(@RequestParam("firstName") String firstName,
+            @RequestParam("lastName") String lastName,
+            @RequestParam("username") String username,
+            @RequestParam("email") String email,
+            @RequestParam("role") String role,
+            @RequestParam("isActive") String isActive,
+            @RequestParam("isNotLocked") String isNotLocked,
+            @RequestParam(value = "profileImage", required = false) MultipartFile profileImage)
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
+
+        User newUser = userService.addNewUser(firstName, lastName, username, email, role,
+                Boolean.parseBoolean(isNotLocked), Boolean.parseBoolean(isActive), profileImage);
+
+        return new ResponseEntity<>(newUser, HttpStatus.OK);
 
     }
 
