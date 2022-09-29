@@ -1,6 +1,7 @@
 package com.giimhana.userManagement.resource;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.mail.MessagingException;
 
@@ -8,9 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,9 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.giimhana.userManagement.constant.SecurityConstant;
+import com.giimhana.userManagement.constant.UserImplConstant;
+import com.giimhana.userManagement.domain.HttpResponse;
 import com.giimhana.userManagement.domain.User;
 import com.giimhana.userManagement.domain.UserPrincipal;
 import com.giimhana.userManagement.exception.domain.EmailExistException;
+import com.giimhana.userManagement.exception.domain.EmailNotFoundException;
 import com.giimhana.userManagement.exception.domain.ExceptionHandling;
 import com.giimhana.userManagement.exception.domain.UsernameExistException;
 import com.giimhana.userManagement.service.UserService;
@@ -70,6 +78,67 @@ public class UserResource extends ExceptionHandling {
 
         return new ResponseEntity<>(newUser, HttpStatus.OK);
 
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<User> update(@RequestParam("currentUsername") String currentUsername,
+            @RequestParam("firstName") String firstName,
+            @RequestParam("lastName") String lastName,
+            @RequestParam("username") String username,
+            @RequestParam("email") String email,
+            @RequestParam("role") String role,
+            @RequestParam("isActive") String isActive,
+            @RequestParam("isNotLocked") String isNotLocked,
+            @RequestParam(value = "profileImage", required = false) MultipartFile profileImage)
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
+
+        User updatedUser = userService.updateUser(currentUsername, firstName, lastName, username, email, role,
+                Boolean.parseBoolean(isNotLocked), Boolean.parseBoolean(isActive), profileImage);
+
+        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+
+    }
+
+    @GetMapping("/find/{username}")
+    public ResponseEntity<User> getUser(@PathVariable("username") String username) {
+        User user = userService.findUserByUsername(username);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = userService.getUsers();
+        return new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+    @GetMapping("/resetPassword/{email}")
+    public ResponseEntity<HttpResponse> resetPassword(@PathVariable("email") String email)
+            throws EmailNotFoundException, MessagingException {
+        userService.resetPassword(email);
+        return response(HttpStatus.OK, UserImplConstant.EMAIL_SENT + email);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAnyAuthority('user:delete')")
+    public ResponseEntity<HttpResponse> deleteUser(@PathVariable("id") long id) {
+        userService.deleteUser(id);
+        return response(HttpStatus.NO_CONTENT, UserImplConstant.USER_DELETED_SUCESSFULLY);
+    }
+
+    @PostMapping("/updateProfileImage")
+    public ResponseEntity<User> updateProfileImage(@RequestParam("username") String username,
+            @RequestParam(value = "profileImage") MultipartFile profileImage)
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
+
+        User user = userService.updateProfileImage(username, profileImage);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+
+    }
+
+    private ResponseEntity<HttpResponse> response(HttpStatus httpStatus, String message) {
+        HttpResponse body = new HttpResponse(httpStatus.value(), httpStatus,
+                httpStatus.getReasonPhrase().toUpperCase(), message.toUpperCase());
+        return new ResponseEntity<>(body, httpStatus);
     }
 
     @PostMapping("/register")

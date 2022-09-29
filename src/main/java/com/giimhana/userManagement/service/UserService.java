@@ -19,7 +19,7 @@ public interface UserService {
                         throws UsernameNotFoundException, UsernameExistException, EmailExistException,
                         MessagingException;
 
-        List<User> getUser();
+        List<User> getUsers();
 
         User findUserByUsername(String username);
 
