@@ -1,6 +1,8 @@
 package com.giimhana.userManagement.resource;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -13,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.giimhana.userManagement.constant.FileConstant;
 import com.giimhana.userManagement.constant.SecurityConstant;
 import com.giimhana.userManagement.constant.UserImplConstant;
 import com.giimhana.userManagement.domain.HttpResponse;
@@ -133,6 +137,13 @@ public class UserResource extends ExceptionHandling {
         User user = userService.updateProfileImage(username, profileImage);
         return new ResponseEntity<>(user, HttpStatus.OK);
 
+    }
+
+    @GetMapping(path = "/iamge/{username}/{fileName}", produces = MimeTypeUtils.IMAGE_JPEG_VALUE)
+    public byte[] getProfileImage(@PathVariable("username") String username,
+            @PathVariable("fileName") String fileName) throws IOException {
+        return Files
+                .readAllBytes(Paths.get(FileConstant.USER_FOLDER + username + FileConstant.FORWARD_SLASH + fileName));
     }
 
     private ResponseEntity<HttpResponse> response(HttpStatus httpStatus, String message) {
