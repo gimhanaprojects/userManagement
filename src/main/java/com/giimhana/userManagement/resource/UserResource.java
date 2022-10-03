@@ -142,14 +142,14 @@ public class UserResource extends ExceptionHandling {
 
     }
 
-    @GetMapping(path = "/iamge/{username}/{fileName}", produces = MimeTypeUtils.IMAGE_JPEG_VALUE)
+    @GetMapping(path = "/image/{username}/{fileName}", produces = MimeTypeUtils.IMAGE_JPEG_VALUE)
     public byte[] getProfileImage(@PathVariable("username") String username,
             @PathVariable("fileName") String fileName) throws IOException {
         return Files
                 .readAllBytes(Paths.get(FileConstant.USER_FOLDER + username + FileConstant.FORWARD_SLASH + fileName));
     }
 
-    @GetMapping(path = "/iamge/profile/{username}", produces = MimeTypeUtils.IMAGE_JPEG_VALUE)
+    @GetMapping(path = "/image/profile/{username}", produces = MimeTypeUtils.IMAGE_JPEG_VALUE)
     public byte[] getTempProfileImage(@PathVariable("username") String username) throws IOException {
         URL url = new URL(FileConstant.TEMP_PROFILE_IMAGE_BASE_URL + username);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
