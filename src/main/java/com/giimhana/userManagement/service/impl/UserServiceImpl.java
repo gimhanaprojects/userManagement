@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             throw new UsernameNotFoundException(UserImplConstant.NO_USER_FOUND_BY_USERNAME + username);
         } else {
             validateLoginAttempt(user);
-            user.setLastLoginDate(user.getLastLoginDate());
+            user.setLastLoginDateDisplay(user.getLastLoginDate());
             user.setLastLoginDate(new Date());
             userRepository.save(user);
             UserPrincipal userPrincipal = new UserPrincipal(user);
@@ -203,7 +203,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         User user = new User();
         String password = generatePassword();
 
-        System.out.println("Add user password " + password);
+        System.out.println("ADD USER PASSWORD " + password);
 
         String encodePassword = encordedPassword(password);
         user.setUserId(generateUserId());
