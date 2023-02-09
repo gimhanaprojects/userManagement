@@ -15,8 +15,7 @@
 	<description>Spring Boot application with user roles</description>
 	<properties>
 		<java.version>11</java.version>
-		<!-- The main class to start by executing java -jar -->
-		<start-class></start-class>
+		
 	</properties>
 	<dependencies>
 		<dependency>

@@ -10,11 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -23,9 +24,11 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.slf4j.*;
 
 import com.giimhana.userManagement.constant.FileConstant;
+import org.springframework.util.MimeTypeUtils;
 import com.giimhana.userManagement.constant.UserImplConstant;
 import com.giimhana.userManagement.domain.User;
 import com.giimhana.userManagement.domain.UserPrincipal;
@@ -33,6 +36,7 @@ import com.giimhana.userManagement.enumeration.Role;
 import com.giimhana.userManagement.exception.domain.EmailExistException;
 import com.giimhana.userManagement.exception.domain.EmailNotFoundException;
 import com.giimhana.userManagement.exception.domain.UsernameExistException;
+import com.giimhana.userManagement.exception.domain.NotAnImageFileException;
 import com.giimhana.userManagement.repository.UserRepository;
 import com.giimhana.userManagement.service.EmailService;
 import com.giimhana.userManagement.service.LoginAttemptService;
@@ -192,11 +196,15 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public User addNewUser(String firstName, String lastName, String username, String email, String role,
             boolean isNotLocked, boolean isActive, MultipartFile profileImage)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException,
+            NotAnImageFileException {
         validateNewUsernameAndEmail(StringUtils.EMPTY, username, email);
 
         User user = new User();
         String password = generatePassword();
+
+        System.out.println("Add user password " + password);
+
         String encodePassword = encordedPassword(password);
         user.setUserId(generateUserId());
         user.setFirstName(firstName);
@@ -216,8 +224,17 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return user;
     }
 
-    private void saveProfileImage(User user, MultipartFile profileImage) throws IOException {
+    private void saveProfileImage(User user, MultipartFile profileImage) throws IOException, NotAnImageFileException {
         if (profileImage != null) {
+
+            if (!Arrays.asList(MimeTypeUtils.IMAGE_JPEG_VALUE, MimeTypeUtils.IMAGE_PNG_VALUE,
+                    MimeTypeUtils.IMAGE_GIF_VALUE).contains(profileImage.getContentType())) {
+
+                throw new NotAnImageFileException(
+                        profileImage.getOriginalFilename() + "is not an image file. Please upload an image");
+
+            }
+
             Path userFolder = Paths.get(FileConstant.USER_FOLDER + user.getUsername()).toAbsolutePath().normalize();
 
             if (!Files.exists(userFolder)) {
@@ -252,7 +269,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public User updateUser(String currentUsername, String newFirstName, String newLastName, String newUsername,
             String newEmail, String role, boolean isNotLocked, boolean isActive, MultipartFile profileImage)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException,
+            NotAnImageFileException {
         User currentUser = validateNewUsernameAndEmail(currentUsername, newUsername, newEmail);
 
         currentUser.setFirstName(newFirstName);
@@ -270,9 +288,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public void deleteUser(long id) {
+    public void deleteUser(String username) throws IOException {
 
-        userRepository.deleteById(id);
+        User user = userRepository.findUserByUsername(username);
+        Path userFolder = Paths.get(FileConstant.USER_FOLDER + user.getUsername()).toAbsolutePath().normalize();
+        FileUtils.deleteDirectory(new File(userFolder.toString()));
+        userRepository.deleteById(user.getId());
 
     }
 
@@ -284,6 +305,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             throw new EmailNotFoundException(UserImplConstant.NO_USER_FOUND_BY_USERNAME + email);
         }
         String password = generatePassword();
+
+        System.out.println("RESETED PASSWORD " + password);
+
         user.setPassword(encordedPassword(password));
         userRepository.save(user);
         emailService.sendNewPasswordEmail(user.getFirstName(), password, user.getEmail());
@@ -291,7 +315,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public User updateProfileImage(String username, MultipartFile profileImage)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException,
+            NotAnImageFileException {
         User user = validateNewUsernameAndEmail(username, null, null);
         saveProfileImage(user, profileImage);
         return user;

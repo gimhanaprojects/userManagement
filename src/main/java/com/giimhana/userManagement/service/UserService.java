@@ -12,6 +12,7 @@ import com.giimhana.userManagement.domain.User;
 import com.giimhana.userManagement.exception.domain.EmailExistException;
 import com.giimhana.userManagement.exception.domain.EmailNotFoundException;
 import com.giimhana.userManagement.exception.domain.UsernameExistException;
+import com.giimhana.userManagement.exception.domain.NotAnImageFileException;
 
 public interface UserService {
 
@@ -28,18 +29,21 @@ public interface UserService {
         User addNewUser(String firstName, String lastName, String username, String email, String role,
                         boolean isNotLocked,
                         boolean isActive, MultipartFile profileImage)
-                        throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException;
+                        throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException,
+                        NotAnImageFileException;
 
         User updateUser(String currentUsername, String newFirstName, String newLastName, String newUsername,
                         String newEmail, String role,
                         boolean isNotLocked, boolean isActive, MultipartFile profileImage)
-                        throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException;
+                        throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException,
+                        NotAnImageFileException;
 
-        void deleteUser(long id);
+        void deleteUser(String username) throws IOException;
 
         void resetPassword(String email) throws EmailNotFoundException, MessagingException;
 
         User updateProfileImage(String username, MultipartFile profileImage)
-                        throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException;
+                        throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException,
+                        NotAnImageFileException;
 
 }

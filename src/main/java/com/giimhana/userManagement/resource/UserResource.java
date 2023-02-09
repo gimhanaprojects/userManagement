@@ -39,6 +39,7 @@ import com.giimhana.userManagement.exception.domain.EmailExistException;
 import com.giimhana.userManagement.exception.domain.EmailNotFoundException;
 import com.giimhana.userManagement.exception.domain.ExceptionHandling;
 import com.giimhana.userManagement.exception.domain.UsernameExistException;
+import com.giimhana.userManagement.exception.domain.NotAnImageFileException;
 import com.giimhana.userManagement.service.UserService;
 import com.giimhana.userManagement.utility.JWTTokenProvider;
 
@@ -64,6 +65,7 @@ public class UserResource extends ExceptionHandling {
         authenticate(user.getUsername(), user.getPassword());
         User loginUser = userService.findUserByUsername((user.getUsername()));
         UserPrincipal userPrincipal = new UserPrincipal(loginUser);
+        System.out.println("THAHAHT " + userPrincipal.getAuthorities());
         HttpHeaders jwtHeader = getJwtHeader(userPrincipal);
         return new ResponseEntity<>(loginUser, jwtHeader, HttpStatus.OK);
 
@@ -78,7 +80,8 @@ public class UserResource extends ExceptionHandling {
             @RequestParam("isActive") String isActive,
             @RequestParam("isNotLocked") String isNotLocked,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException,
+            NotAnImageFileException {
 
         User newUser = userService.addNewUser(firstName, lastName, username, email, role,
                 Boolean.parseBoolean(isNotLocked), Boolean.parseBoolean(isActive), profileImage);
@@ -97,7 +100,8 @@ public class UserResource extends ExceptionHandling {
             @RequestParam("isActive") String isActive,
             @RequestParam("isNotLocked") String isNotLocked,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException,
+            NotAnImageFileException {
 
         User updatedUser = userService.updateUser(currentUsername, firstName, lastName, username, email, role,
                 Boolean.parseBoolean(isNotLocked), Boolean.parseBoolean(isActive), profileImage);
@@ -125,17 +129,25 @@ public class UserResource extends ExceptionHandling {
         return response(HttpStatus.OK, UserImplConstant.EMAIL_SENT + email);
     }
 
-    @DeleteMapping("/delete/{id}")
+    // @DeleteMapping("/delete/{id}")
+    // @PreAuthorize("hasAnyAuthority('user:delete')")
+    // public ResponseEntity<HttpResponse> deleteUser(@PathVariable("id") long id) {
+    // userService.deleteUser(id);
+    // return response(HttpStatus.OK, UserImplConstant.USER_DELETED_SUCESSFULLY);
+    // }
+
+    @DeleteMapping("/delete/{username}")
     @PreAuthorize("hasAnyAuthority('user:delete')")
-    public ResponseEntity<HttpResponse> deleteUser(@PathVariable("id") long id) {
-        userService.deleteUser(id);
-        return response(HttpStatus.NO_CONTENT, UserImplConstant.USER_DELETED_SUCESSFULLY);
+    public ResponseEntity<HttpResponse> deleteUser(@PathVariable("username") String username) throws IOException {
+        userService.deleteUser(username);
+        return response(HttpStatus.OK, UserImplConstant.USER_DELETED_SUCESSFULLY);
     }
 
     @PostMapping("/updateProfileImage")
     public ResponseEntity<User> updateProfileImage(@RequestParam("username") String username,
             @RequestParam(value = "profileImage") MultipartFile profileImage)
-            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException {
+            throws UsernameNotFoundException, UsernameExistException, EmailExistException, IOException,
+            NotAnImageFileException {
 
         User user = userService.updateProfileImage(username, profileImage);
         return new ResponseEntity<>(user, HttpStatus.OK);
